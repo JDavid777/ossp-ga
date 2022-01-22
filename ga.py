@@ -18,6 +18,8 @@ import random
 import numpy as np
 from deap import algorithms, base, creator, tools
 
+from problem.ossp_problem import OsspProblem
+
 """### OSSP 
 This eq is related to the maximum completion time of all jobs that must be processed on machines.
 On the other hand, it indicates that the total processing time
@@ -37,38 +39,26 @@ MATRIX = [[1, 2, 3, 4, 5, 6, 7, 8, 9],
           [3, 1, 2, 1, 3, 2, 1, 2, 3],
           [2, 3, 5, 5, 7, 1, 4, 5, 1]]
 
-operations = MATRIX[0]
-jobs = MATRIX[1]
-machines = MATRIX[2]
-times = MATRIX[3]
-length_individual = len(operations)
-makespan = 0
-
-
-
-def eval_ossp(individual):
-    pass
-
+ossp = OsspProblem(MATRIX,3)
 
 """OSSP"""
 
 
-def setup_ga_ossp(mate = tools.cxOrdered, tournsize = 8, indpb = 0.05):
+def setup_ga_ossp( indpb = 0.2):
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     toolbox = base.Toolbox()
-    toolbox.register("indices", random.randint, 1, 9)
-    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, n=64)
+    toolbox.register("indices", random.sample, range(1,10), 9)
+    toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.indices)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-    toolbox.register("evaluate", eval_ossp())
+    toolbox.register("evaluate", ossp.evaluate)
     toolbox.register("mate", tools.cxTwoPoint)
-    # toolbox.register("mate", tools.cxUniform, indpb=cx_indpb)
-    toolbox.register("mutate", tools.mutFlipBit, indpb = mx_indpb)
-    toolbox.register("select", tools.selTournament, tournsize = 8)
+    toolbox.register("mutate", tools.mutFlipBit, indpb=indpb)
+    toolbox.register("select", tools.selTournament, tournsize=2)
     return toolbox
 
 
-def run_ga_ossp(toolbox, population_size=100, cxpb=0.85, tournsize=5, mutpb=0.1):
+def run_ga_ossp(toolbox, population_size=92, cxpb=0.85, mutpb=0.1):
     pop = toolbox.population(n=population_size)
     # only save the very best one
     hof = tools.HallOfFame(1)
@@ -77,10 +67,10 @@ def run_ga_ossp(toolbox, population_size=100, cxpb=0.85, tournsize=5, mutpb=0.1)
     stats.register("std", np.std)
     stats.register("min", np.min)
     stats.register("max", np.max)
-    algorithms.eaSimple(pop, toolbox, cxpb=cxpb, mutpb=mutpb, ngen=300, stats=stats, halloffame=hof)
+    algorithms.eaSimple(pop, toolbox, cxpb=cxpb, mutpb=mutpb, ngen=250, stats=stats, halloffame=hof)
     return pop, stats, hof
 
-
+'''
 plt.plot(x, y, 'o', color='black')
 toolbox = setup_ga_ossp(mate = tools.cxOrdered, indpb = 0.05)
 pop, stats, hof = run_ga_ossp(toolbox, population_size = 100, cxpb = 0.85, mutpb = 0.25)
@@ -91,4 +81,9 @@ full_tour = copy(ind)
 full_tour.append(ind[0])
 
 plt.plot(x[full_tour], y[full_tour])
+'''
 
+if __name__ == '__main__':
+    toolbox=setup_ga_ossp()
+   # print(toolbox.population)
+    run_ga_ossp(toolbox)
