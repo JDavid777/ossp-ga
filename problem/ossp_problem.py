@@ -47,17 +47,17 @@ class OsspProblem:
         return False
 
     def evaluate(self, individual):
-        if self.validate(individual):
-            for operation in individual:
-                machine = self.get_machine(operation)
-                machine.run(self.jobs_in_execution,operation)
-            makespan = 0
-            for value in self.jobs_in_execution:
-                if self.jobs_in_execution[value] > makespan:
-                    makespan = self.jobs_in_execution[value]
-            return makespan,
-        else:
-            return 10000,
+        #print(individual)
+
+        for operation in individual:
+            machine = self.get_machine(operation)
+            machine.run(self.jobs_in_execution,operation)
+        makespan = 0
+        for value in self.jobs_in_execution:
+            if self.jobs_in_execution[value] > makespan:
+                makespan = self.jobs_in_execution[value]
+        return makespan,
+
 
 '''
     op1 = Operation(op_id=1, machine_id=3, job=1, time=2)

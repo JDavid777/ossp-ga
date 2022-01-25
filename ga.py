@@ -11,6 +11,7 @@ Original file is located at
 
 
 from copy import copy
+from operator import truediv
 
 import matplotlib.pyplot as plt
 import array
@@ -55,20 +56,59 @@ def cxTwoPoint(ind1, ind2):
     This function uses the :func:`~random.randint` function from the Python
     base :mod:`random` module.
     """
+    
     size = min(len(ind1), len(ind2))
-    cxpoint1 = random.randint(1, size)
-    cxpoint2 = random.randint(1, size - 1)
-    if cxpoint2 >= cxpoint1:
-        cxpoint2 += 1
-    else:  # Swap the two cx points
-        cxpoint1, cxpoint2 = cxpoint2, cxpoint1
+    #print("o",ind1,ind2)
+    cxpoint1 = random.randint(0, size-1)
+    cxpoint2 = random.randint(0, size-1)
 
-    ind1[cxpoint1:cxpoint2], ind2[cxpoint1:cxpoint2] \
-        = ind2[cxpoint1:cxpoint2], ind1[cxpoint1:cxpoint2]
+    if cxpoint2 <= cxpoint1:
+        cxpoint1, cxpoint2 = cxpoint2, cxpoint1     
+    
+    #print(cxpoint1,cxpoint2)
+    for i in range(size):
+        if (contains(ind2[i],ind1,cxpoint1,cxpoint2+1)):
+            ind2[i] = -1
+    
+    for i in range(size):
+        #print("i:",i,ind1,ind2)
+        if i>=cxpoint1 and i<=cxpoint2:
+            continue
+        for j in range(size):
+            if(ind2[j]==-1):
+                continue
+            else:
+                ind1[i] = ind2[j]
+                ind2[j] = -1
+                break
+    #print("f",ind1)
+    return ind1, ind1
 
-    return ind1, ind2
+def contains(val, ind, left, right):
+    for i in range(left,right):
+        if(val==ind[i]):
+            return True
+    return False
 
-def setup_ga_ossp( indpb = 0.2):
+def displacementMutationOperation(ind, indpb):
+    print(ind)
+    size = len(ind)
+
+    cxpoint1 = random.randint(0, size-1)
+    cxpoint2 = random.randint(0, size-1)
+
+    alProb=random.random()
+    if(alProb<indpb):
+        cxVal1 = ind[cxpoint1]
+        cxVal2 = ind[cxpoint2]
+
+        ind[cxpoint1] = cxVal2
+        ind[cxpoint2] = cxVal1
+    print(ind)
+    return ind,
+
+
+def setup_ga_ossp( indpb = 0.8):
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     toolbox = base.Toolbox()
@@ -76,9 +116,9 @@ def setup_ga_ossp( indpb = 0.2):
     toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.indices)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     toolbox.register("evaluate", ossp.evaluate)
-    toolbox.register("mate", tools.cxTwoPoint)
-    toolbox.register("mutate", tools.mutFlipBit, indpb=indpb)
-    toolbox.register("select", tools.selTournament, tournsize=2)
+    toolbox.register("mate", cxTwoPoint)
+    toolbox.register("mutate", displacementMutationOperation, indpb=indpb)
+    toolbox.register("select", tools.selTournament, tournsize=1)
     return toolbox
 
 
@@ -108,6 +148,9 @@ plt.plot(x[full_tour], y[full_tour])
 '''
 
 if __name__ == '__main__':
+    '''ind = [1,2,3,4,5,6,7,8,9]
+    ind2 = [3,2,1,9,4,5,8,7,6]
+    cxTwoPoint(ind,ind2)'''
     toolbox=setup_ga_ossp()
-   # print(toolbox.population)
+    #print(toolbox.population)
     run_ga_ossp(toolbox)
