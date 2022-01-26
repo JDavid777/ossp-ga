@@ -35,12 +35,25 @@ it should be necessarily equal to L
 # Variables globales
 
 # # 3 X 3 Problem
+
+'''
 MATRIX = [[1, 2, 3, 4, 5, 6, 7, 8, 9],
           [1, 1, 1, 2, 2, 2, 3, 3, 3],
           [3, 1, 2, 1, 3, 2, 1, 2, 3],
           [2, 3, 5, 5, 7, 1, 4, 5, 1]]
-
-ossp = OsspProblem(MATRIX,3)
+'''
+MATRIX =[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+         [1,3,2,4,4,3,1,2,4,2,1,3,3,1,2,4],
+         [1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4],
+         [90,50,64,65,47,92,73,26,27,94,48,93,43,76,87,65]]
+'''
+MATRIX =[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25],
+        [4,1,3,5,2,1,4,2,5,3,4,1,2,5,3,2,4,5,3,1,1,4,2,5,3],
+        [1,2,3,4,5,1,2,3,4,5,1,2,3,4,5,1,2,3,4,5,1,2,3,4,5],
+        [85,64,31,44,66,7,14,69,18,68,1,74,70,90,60,45,76,13,98,54,80,15,45,91,10]
+]
+'''
+ossp = OsspProblem(MATRIX,4)
 
 """OSSP"""
 
@@ -58,20 +71,16 @@ def cxTwoPoint(ind1, ind2):
     """
     
     size = min(len(ind1), len(ind2))
-    #print("o",ind1,ind2)
     cxpoint1 = random.randint(0, size-1)
     cxpoint2 = random.randint(0, size-1)
 
     if cxpoint2 <= cxpoint1:
-        cxpoint1, cxpoint2 = cxpoint2, cxpoint1     
-    
-    #print(cxpoint1,cxpoint2)
+        cxpoint1, cxpoint2 = cxpoint2, cxpoint1
+
     for i in range(size):
         if (contains(ind2[i],ind1,cxpoint1,cxpoint2+1)):
             ind2[i] = -1
-    
     for i in range(size):
-        #print("i:",i,ind1,ind2)
         if i>=cxpoint1 and i<=cxpoint2:
             continue
         for j in range(size):
@@ -81,7 +90,6 @@ def cxTwoPoint(ind1, ind2):
                 ind1[i] = ind2[j]
                 ind2[j] = -1
                 break
-    #print("f",ind1)
     return ind1, ind1
 
 def contains(val, ind, left, right):
@@ -91,28 +99,25 @@ def contains(val, ind, left, right):
     return False
 
 def displacementMutationOperation(ind, indpb):
-    print(ind)
     size = len(ind)
-
     cxpoint1 = random.randint(0, size-1)
     cxpoint2 = random.randint(0, size-1)
 
     alProb=random.random()
-    if(alProb<indpb):
+    if alProb < indpb :
         cxVal1 = ind[cxpoint1]
         cxVal2 = ind[cxpoint2]
 
         ind[cxpoint1] = cxVal2
         ind[cxpoint2] = cxVal1
-    print(ind)
     return ind,
 
 
-def setup_ga_ossp( indpb = 0.8):
+def setup_ga_ossp( indpb = 0.2):
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     toolbox = base.Toolbox()
-    toolbox.register("indices", random.sample, range(1,10), 9)
+    toolbox.register("indices", random.sample, range(1,17), 16)
     toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.indices)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     toolbox.register("evaluate", ossp.evaluate)
@@ -122,7 +127,7 @@ def setup_ga_ossp( indpb = 0.8):
     return toolbox
 
 
-def run_ga_ossp(toolbox, population_size=92, cxpb=0.85, mutpb=0.1):
+def run_ga_ossp(toolbox, population_size=92, cxpb=0.8, mutpb=0.2):
     pop = toolbox.population(n=population_size)
     # only save the very best one
     hof = tools.HallOfFame(1)

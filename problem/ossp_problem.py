@@ -46,16 +46,25 @@ class OsspProblem:
             return True
         return False
 
+    def clearMachines(self):
+        for machine in self.machine_list:
+            machine.makespan = 0;
+
     def evaluate(self, individual):
         #print(individual)
 
         for operation in individual:
             machine = self.get_machine(operation)
+            #print("machine",machine.id)
             machine.run(self.jobs_in_execution,operation)
         makespan = 0
         for value in self.jobs_in_execution:
             if self.jobs_in_execution[value] > makespan:
                 makespan = self.jobs_in_execution[value]
+        for operation in self.operation_list:
+            self.jobs_in_execution[operation.job]=0
+        self.clearMachines();
+        #print(individual, makespan)
         return makespan,
 
 
@@ -95,5 +104,5 @@ if __name__ == '__main__':
               [2, 3, 5, 5, 7, 1, 4, 5, 1]]
 
     ossp = OsspProblem(MATRIX, 3)
-    inv = [1, 3, 6, 5, 7, 4, 2, 9, 9]
+    inv = [5, 9, 1, 7, 6, 2, 8, 3, 4]
     ossp.evaluate(inv)
