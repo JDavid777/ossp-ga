@@ -9,7 +9,6 @@ Original file is located at
 # Solving the open shop scheduling problem with Genetic Algorithms
 """
 
-
 from copy import copy
 from operator import truediv
 
@@ -36,26 +35,63 @@ it should be necessarily equal to L
 
 # # 3 X 3 Problem
 
-'''
+
 MATRIX = [[1, 2, 3, 4, 5, 6, 7, 8, 9],
           [1, 1, 1, 2, 2, 2, 3, 3, 3],
           [3, 1, 2, 1, 3, 2, 1, 2, 3],
           [2, 3, 5, 5, 7, 1, 4, 5, 1]]
 '''
-MATRIX =[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
-         [1,3,2,4,4,3,1,2,4,2,1,3,3,1,2,4],
-         [1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4],
-         [90,50,64,65,47,92,73,26,27,94,48,93,43,76,87,65]]
-'''
+
+# 4x4 Problem
+MATRIX = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+          [1, 3, 2, 4, 4, 3, 1, 2, 4, 2, 1, 3, 3, 1, 2, 4],
+          [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4],
+          [90, 50, 64, 65, 47, 92, 73, 26, 27, 94, 48, 93, 43, 76, 87, 65]]
+
+
+## 5x5 Problem
 MATRIX =[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25],
         [4,1,3,5,2,1,4,2,5,3,4,1,2,5,3,2,4,5,3,1,1,4,2,5,3],
         [1,2,3,4,5,1,2,3,4,5,1,2,3,4,5,1,2,3,4,5,1,2,3,4,5],
         [85,64,31,44,66,7,14,69,18,68,1,74,70,90,60,45,76,13,98,54,80,15,45,91,10]
 ]
 '''
-ossp = OsspProblem(MATRIX,4)
 
-"""OSSP"""
+# Tamaño del problema
+N = max(MATRIX[2])
+INVSIZE = N * N  # Tamaño del individio, corresponde al n�mero de operaciones del problema
+
+## Inicilizamos el problema. Se realiza la configuraci�n de las m�quinas
+ossp = OsspProblem(MATRIX, N)
+
+"""OSSP Y GA"""
+
+def setup_ga_ossp(indpb=0.33):
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMin)
+    toolbox = base.Toolbox()
+    toolbox.register("indices", random.sample, range(1, INVSIZE + 1), INVSIZE)
+    toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.indices)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    toolbox.register("evaluate", ossp.evaluate)
+    toolbox.register("mate", cxTwoPoint)
+    toolbox.register("mutate", displacementMutationOperation, indpb=indpb)
+    toolbox.register("select", tools.selTournament, tournsize=3)
+    return toolbox
+
+
+def run_ga_ossp(toolbox, population_size=170, cxpb=0.25, mutpb=0.33):
+    pop = toolbox.population(n=population_size)
+    # only save the very best one
+    hof = tools.HallOfFame(2)
+    stats = tools.Statistics(lambda ind: ind.fitness.values)
+    stats.register("avg", np.mean)
+    stats.register("std", np.std)
+    stats.register("min", np.min)
+    stats.register("max", np.max)
+    algorithms.eaSimple(pop, toolbox, cxpb=cxpb, mutpb=mutpb, ngen=200, stats=stats, halloffame=hof)
+    return pop, stats, hof
+
 
 def cxTwoPoint(ind1, ind2):
     """Executes a two-point crossover on the input :term:`sequence`
@@ -69,22 +105,22 @@ def cxTwoPoint(ind1, ind2):
     This function uses the :func:`~random.randint` function from the Python
     base :mod:`random` module.
     """
-    
+
     size = min(len(ind1), len(ind2))
-    cxpoint1 = random.randint(0, size-1)
-    cxpoint2 = random.randint(0, size-1)
+    cxpoint1 = random.randint(0, size - 1)
+    cxpoint2 = random.randint(0, size - 1)
 
     if cxpoint2 <= cxpoint1:
         cxpoint1, cxpoint2 = cxpoint2, cxpoint1
 
     for i in range(size):
-        if (contains(ind2[i],ind1,cxpoint1,cxpoint2+1)):
+        if (contains(ind2[i], ind1, cxpoint1, cxpoint2 + 1)):
             ind2[i] = -1
     for i in range(size):
-        if i>=cxpoint1 and i<=cxpoint2:
+        if i >= cxpoint1 and i <= cxpoint2:
             continue
         for j in range(size):
-            if(ind2[j]==-1):
+            if (ind2[j] == -1):
                 continue
             else:
                 ind1[i] = ind2[j]
@@ -92,19 +128,21 @@ def cxTwoPoint(ind1, ind2):
                 break
     return ind1, ind1
 
+
 def contains(val, ind, left, right):
-    for i in range(left,right):
-        if(val==ind[i]):
+    for i in range(left, right):
+        if (val == ind[i]):
             return True
     return False
 
+
 def displacementMutationOperation(ind, indpb):
     size = len(ind)
-    cxpoint1 = random.randint(0, size-1)
-    cxpoint2 = random.randint(0, size-1)
+    cxpoint1 = random.randint(0, size - 1)
+    cxpoint2 = random.randint(0, size - 1)
 
-    alProb=random.random()
-    if alProb < indpb :
+    alProb = random.random()
+    if alProb < indpb:
         cxVal1 = ind[cxpoint1]
         cxVal2 = ind[cxpoint2]
 
@@ -113,49 +151,6 @@ def displacementMutationOperation(ind, indpb):
     return ind,
 
 
-def setup_ga_ossp( indpb = 0.2):
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMin)
-    toolbox = base.Toolbox()
-    toolbox.register("indices", random.sample, range(1,17), 16)
-    toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.indices)
-    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-    toolbox.register("evaluate", ossp.evaluate)
-    toolbox.register("mate", cxTwoPoint)
-    toolbox.register("mutate", displacementMutationOperation, indpb=indpb)
-    toolbox.register("select", tools.selTournament, tournsize=1)
-    return toolbox
-
-
-def run_ga_ossp(toolbox, population_size=92, cxpb=0.8, mutpb=0.2):
-    pop = toolbox.population(n=population_size)
-    # only save the very best one
-    hof = tools.HallOfFame(1)
-    stats = tools.Statistics(lambda ind: ind.fitness.values)
-    stats.register("avg", np.mean)
-    stats.register("std", np.std)
-    stats.register("min", np.min)
-    stats.register("max", np.max)
-    algorithms.eaSimple(pop, toolbox, cxpb=cxpb, mutpb=mutpb, ngen=250, stats=stats, halloffame=hof)
-    return pop, stats, hof
-
-'''
-plt.plot(x, y, 'o', color='black')
-toolbox = setup_ga_ossp(mate = tools.cxOrdered, indpb = 0.05)
-pop, stats, hof = run_ga_ossp(toolbox, population_size = 100, cxpb = 0.85, mutpb = 0.25)
-ind = hof[0]
-print("Solution: ", ind)
-plt.figure(2)
-full_tour = copy(ind)
-full_tour.append(ind[0])
-
-plt.plot(x[full_tour], y[full_tour])
-'''
-
 if __name__ == '__main__':
-    '''ind = [1,2,3,4,5,6,7,8,9]
-    ind2 = [3,2,1,9,4,5,8,7,6]
-    cxTwoPoint(ind,ind2)'''
-    toolbox=setup_ga_ossp()
-    #print(toolbox.population)
+    toolbox = setup_ga_ossp()
     run_ga_ossp(toolbox)

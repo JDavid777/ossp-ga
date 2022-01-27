@@ -10,3 +10,8 @@
  `pipenv install`  Para la instalacion de las librerias necesarias
  `pipenv shell`	Para la activacion del entorno virtual 
 
+## Uso
+
+### Ejecutar el archivo `ga.py`.
+### Se gregaron manualmente 3 ejemplos: problema 3x3, 4x4 y 5x5, 
+
